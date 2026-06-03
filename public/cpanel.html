@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>Panel de Administración | JLFH Portfolio</title>
+  <style>
+    :root {
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-sidebar: #0f172a;
+      --bg-sidebar-hover: #1e293b;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --text-sidebar: #cbd5e1;
+      --border: #e2e8f0;
+      --border-sidebar: #1e293b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #dbeafe;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --sidebar-width: 260px;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0f172a;
+      --bg-surface: #1e293b;
+      --bg-sidebar: #020617;
+      --bg-sidebar-hover: #0f172a;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --text-sidebar: #94a3b8;
+      --border: #334155;
+      --border-sidebar: #1e293b;
+      --primary-light: rgba(37, 99, 235, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; scroll-behavior: smooth; }
+    body { background: var(--bg-body); color: var(--text-primary); line-height: 1.5; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* TOAST NOTIFICATIONS */
+    .toast-container {
+      position: fixed; top: 1rem; right: 1rem; z-index: 200;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      pointer-events: none; max-width: 400px; width: calc(100% - 2rem);
+    }
+    .toast {
+      background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.875rem 1rem; box-shadow: var(--shadow-lg);
+      display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem;
+      pointer-events: all; animation: toastIn 0.3s ease;
+      transform-origin: top right;
+    }
+    .toast.hiding { animation: toastOut 0.3s ease forwards; }
+    .toast-icon { width: 20px; height: 20px; flex-shrink: 0; }
+    .toast-success { border-left: 3px solid var(--success); }
+    .toast-error { border-left: 3px solid var(--danger); }
+    .toast-warning { border-left: 3px solid var(--warning); }
+    .toast-info { border-left: 3px solid var(--primary); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(100%) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(100%) scale(0.9); } }
+
+    /* LOGIN */
+    .login-wrap {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--bg-sidebar); padding: 1rem;
+    }
+    .login-box {
+      background: var(--bg-surface); padding: 2.5rem; width: 100%; max-width: 420px;
+      border-radius: var(--radius); box-shadow: var(--shadow-xl); animation: fadeUp 0.5s ease;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .login-box h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .login-box p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-control {
+      width: 100%; padding: 0.65rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--bg-surface); color: var(--text-primary); font-size: 0.95rem; font-family: inherit;
+      transition: var(--transition);
+    }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .form-control::placeholder { color: var(--text-muted); opacity: 0.7; }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    select.form-control { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.7rem center; padding-right: 2rem; }
+    .form-control.error { border-color: var(--danger); box-shadow: 0 0 0 3px var(--danger-bg); }
+    .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .form-hint.error { color: var(--danger); }
+    .char-counter { font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: 0.25rem; }
+    .char-counter.warning { color: var(--warning); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: 1px solid transparent;
+      font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
+      background: var(--bg-body); color: var(--text-primary); transition: var(--transition);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--bg-surface); color: var(--text-secondary); border-color: var(--border); }
+    .btn-secondary:hover { background: var(--bg-body); }
+    .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+    .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border-color: transparent; }
+    .btn-ghost:hover { background: var(--bg-body); }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    .btn-block { width: 100%; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+    /* LAYOUT */
+    .app { display: none; }
+    .app.active { display: block; }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--bg-sidebar); color: var(--text-sidebar);
+      position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width); overflow-y: auto;
+      display: flex; flex-direction: column; z-index: 50;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45;
+      opacity: 0; visibility: hidden; transition: all 0.3s;
+    }
+    .sidebar-overlay.active { opacity: 1; visibility: visible; }
+    .sidebar-brand {
+      padding: 1.25rem 1.5rem; font-size: 1.1rem; font-weight: 700;
+      border-bottom: 1px solid var(--border-sidebar); display: flex; align-items: center; gap: 0.75rem;
+    }
+    .nav-list { list-style: none; padding: 0.75rem 0; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 1.25rem; margin: 0.15rem 0.5rem; border-radius: var(--radius-sm);
+      color: var(--text-muted); font-weight: 500; font-size: 0.9rem;
+      cursor: pointer; border: none; background: none; width: calc(100% - 1rem); text-align: left;
+      transition: var(--transition); position: relative;
+    }
+    .nav-item:hover { background: var(--bg-sidebar-hover); color: var(--text-sidebar); }
+    .nav-item.active { background: var(--primary); color: #fff; }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-badge {
+      margin-left: auto; background: var(--danger); color: white; font-size: 0.65rem;
+      font-weight: 700; padding: 0.15rem 0.4rem; border-radius: 1000px; min-width: 18px;
+      text-align: center; display: none;
+    }
+    .nav-badge.active { display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .sidebar-footer {
+      padding: 1rem 1.25rem; border-top: 1px solid var(--border-sidebar); font-size: 0.75rem; color: var(--text-muted);
+    }
+    .sidebar-close {
+      display: none; position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: var(--text-sidebar); cursor: pointer; padding: 0.25rem;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-close { display: block; }
+    }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-width); min-height: 100vh; transition: margin-left 0.3s; }
+    @media (max-width: 1024px) { .main { margin-left: 0; } }
+
+    .topbar {
+      background: var(--bg-surface); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 40; gap: 1rem;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; flex: 1; }
+    .menu-toggle {
+      display: none; background: none; border: none; cursor: pointer; padding: 0.5rem;
+      color: var(--text-primary); border-radius: var(--radius-sm); transition: var(--transition);
+    }
+    .menu-toggle:hover { background: var(--bg-body); }
+    .menu-toggle svg { transition: transform 0.3s; }
+    .menu-toggle.active svg { transform: rotate(90deg); }
+    @media (max-width: 1024px) { .menu-toggle { display: flex; } }
+    .page-title { font-size: 1.25rem; font-weight: 700; white-space: nowrap; }
+    .topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+    .search-global {
+      position: relative; display: flex; align-items: center;
+    }
+    .search-global input {
+      background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 0.5rem 0.75rem 0.5rem 2rem; font-size: 0.85rem; width: 200px;
+      color: var(--text-primary); transition: var(--transition);
+    }
+    .search-global input:focus { width: 280px; outline: none; border-color: var(--primary); }
+    .search-global svg {
+      position: absolute; left: 0.6rem; color: var(--text-muted);
+      width: 16px; height: 16px; pointer-events: none;
+    }
+    @media (max-width: 768px) {
+      .search-global { display: none; }
+      .page-title { font-size: 1.1rem; }
+    }
+
+    .content { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+
+    /* CARDS */
+    .card {
+      background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); transition: var(--transition); overflow: hidden;
+    }
+    .card:hover { box-shadow: var(--shadow-lg); }
+    .card-header {
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .card-title { font-size: 1rem; font-weight: 700; }
+    .card-body { padding: 1.25rem; }
+    .card-footer { padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); background: var(--bg-body); }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 1024px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
+    .stat-box {
+      background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start;
+      transition: var(--transition);
+    }
+    .stat-box:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .stat-box h3 { font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem; }
+    .stat-box p { font-size: 0.75rem; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-icon { width: 40px; height: 40px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; }
+    .stat-icon.blue { background: var(--primary-light); color: var(--primary); }
+    .stat-icon.green { background: var(--success-bg); color: var(--success); }
+    .stat-icon.orange { background: var(--warning-bg); color: var(--warning); }
+    .stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+
+    /* TABLE */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .table-wrap::-webkit-scrollbar { height: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th {
+      text-align: left; padding: 0.75rem 1rem; font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
+      border-bottom: 1px solid var(--border); background: var(--bg-body); white-space: nowrap;
+      cursor: pointer; user-select: none; transition: var(--transition);
+    }
+    th:hover { color: var(--primary); background: var(--primary-light); }
+    th.sortable::after { content: '↕'; margin-left: 0.25rem; opacity: 0.3; font-size: 0.8rem; }
+    th.sort-asc::after { content: '↑'; opacity: 1; color: var(--primary); }
+    th.sort-desc::after { content: '↓'; opacity: 1; color: var(--primary); }
+    td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr { transition: var(--transition); }
+    tbody tr:hover { background: rgba(37, 99, 235, 0.03); }
+    .badge {
+      display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 1000px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em;
+    }
+    .badge-published { background: var(--success-bg); color: var(--success); }
+    .badge-draft { background: var(--warning-bg); color: var(--warning); }
+    .badge-archived { background: var(--bg-body); color: var(--text-muted); }
+    .badge-new { background: #dbeafe; color: var(--primary); animation: pulse 2s infinite; }
+    .badge-read { background: var(--bg-body); color: var(--text-muted); }
+
+    .row-actions { display: flex; gap: 0.4rem; }
+    .row-actions button {
+      padding: 0.35rem; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center;
+      transition: var(--transition); position: relative;
+    }
+    .row-actions button:hover { background: var(--bg-body); color: var(--text-primary); transform: scale(1.1); }
+    .row-actions button.danger:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+    .row-actions button[title]:hover::after {
+      content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      background: var(--text-primary); color: white; font-size: 0.7rem; padding: 0.2rem 0.5rem;
+      border-radius: 4px; white-space: nowrap; margin-bottom: 0.25rem; pointer-events: none;
+    }
+
+    /* TABLE TOOLBAR */
+    .table-toolbar {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .search-box {
+      position: relative; display: flex; align-items: center; flex: 1; max-width: 300px;
+    }
+    .search-box input {
+      width: 100%; padding: 0.5rem 0.75rem 0.5rem 2rem; border: 1px solid var(--border);
+      border-radius: var(--radius-sm); background: var(--bg-surface); color: var(--text-primary);
+      font-size: 0.9rem; transition: var(--transition);
+    }
+    .search-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    .search-box svg { position: absolute; left: 0.6rem; color: var(--text-muted); width: 16px; height: 16px; pointer-events: none; }
+    .filter-group { display: flex; gap: 0.5rem; align-items: center; }
+    .filter-group select { padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; }
+
+    /* BULK ACTIONS */
+    .bulk-bar {
+      display: none; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
+      background: var(--primary-light); border: 1px solid var(--primary); border-radius: var(--radius-sm);
+      margin-bottom: 1rem; animation: fadeUp 0.2s ease;
+    }
+    .bulk-bar.active { display: flex; }
+    .bulk-bar span { font-size: 0.85rem; font-weight: 600; color: var(--primary); }
+
+    /* FORMS */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-grid .full { grid-column: 1 / -1; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-check { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+    .form-check input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+    /* FILE INPUT */
+    .file-input-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+    .file-input-box {
+      border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.5rem;
+      text-align: center; cursor: pointer; background: var(--bg-body); transition: var(--transition);
+      position: relative;
+    }
+    .file-input-box:hover, .file-input-box.dragover { border-color: var(--primary); background: var(--primary-light); }
+    .file-input-box.has-file { border-color: var(--success); background: var(--success-bg); }
+    .file-input-box input[type="file"] { display: none; }
+    .file-progress {
+      height: 4px; background: var(--border); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;
+    }
+    .file-progress-bar {
+      height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; border-radius: 2px;
+    }
+    .preview-thumb {
+      width: 120px; height: 80px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 0.5rem;
+    }
+    .preview-circle {
+      width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 2px solid var(--border); margin-top: 0.5rem;
+    }
+
+    /* MEDIA GRID */
+    .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+    .media-item {
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface);
+      cursor: pointer; position: relative; transition: var(--transition);
+    }
+    .media-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .media-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
+    .media-item .meta { padding: 0.5rem; font-size: 0.75rem; color: var(--text-secondary); }
+    .media-item .delete-asset {
+      position: absolute; top: 4px; right: 4px; background: var(--danger); color: white; border: none;
+      border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 0.8rem;
+      transition: var(--transition); z-index: 2;
+    }
+    .media-item:hover .delete-asset { display: flex; }
+    .media-item .delete-asset:hover { transform: scale(1.1); background: #b91c1c; }
+    .media-item .copy-hint {
+      position: absolute; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.8);
+      color: white; font-size: 0.7rem; padding: 0.25rem; text-align: center;
+      transform: translateY(100%); transition: transform 0.2s;
+    }
+    .media-item:hover .copy-hint { transform: translateY(0); }
+
+    /* TABS */
+    .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; gap: 0.25rem; overflow-x: auto; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 0.75rem 1.25rem; border: none; background: none; color: var(--text-secondary);
+      font-weight: 600; font-size: 0.85rem; cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; white-space: nowrap; transition: var(--transition); border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+    .tab:hover { color: var(--text-primary); background: var(--bg-body); }
+
+    /* SECTIONS */
+    .section { display: none; animation: fadeIn 0.3s ease; }
+    .section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100; background: rgba(15, 23, 42, 0.6);
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+      backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s;
+    }
+    .modal-backdrop.active { display: flex; opacity: 1; }
+    .modal {
+      background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius);
+      width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl);
+      transform: scale(0.95) translateY(10px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modal-backdrop.active .modal { transform: scale(1) translateY(0); }
+    .modal-header {
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-surface); z-index: 2;
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-muted); line-height: 1; padding: 0.25rem; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); transition: var(--transition); }
+    .modal-close:hover { background: var(--bg-body); color: var(--danger); }
+    .modal-body { padding: 1.25rem; }
+    .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; position: sticky; bottom: 0; background: var(--bg-surface); z-index: 2; }
+
+    @media (max-width: 640px) {
+      .modal-backdrop { padding: 0; align-items: flex-end; }
+      .modal { max-height: 95vh; border-radius: var(--radius) var(--radius) 0 0; transform: translateY(100%); }
+      .modal-backdrop.active .modal { transform: translateY(0); }
+    }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    .empty svg { width: 48px; height: 48px; margin-bottom: 1rem; opacity: 0.4; }
+
+    /* SKELETON LOADING */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-body) 25%, var(--border) 50%, var(--bg-body) 75%);
+      background-size: 200% 100%; animation: skeleton 1.5s infinite;
+      border-radius: var(--radius-sm); height: 1rem;
+    }
+    @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* UTILS */
+    .text-right { text-align: right; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mt-4 { margin-top: 1rem; }
+    .w-full { width: 100%; }
+    .hidden { display: none !important; }
+    .img-preview-small { max-width: 200px; max-height: 120px; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 0.5rem; }
+
+    /* COLOR PICKER */
+    .color-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .color-opt { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: var(--transition); position: relative; }
+    .color-opt:hover { transform: scale(1.15); }
+    .color-opt.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--primary); }
+    .color-opt.active::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+    /* TOGGLE */
+    .toggle-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 24px; transition: .2s;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider { background: var(--primary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* PREVIEW DEVICE TOGGLE */
+    .preview-devices { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .preview-device-btn {
+      padding: 0.5rem; border: 1px solid var(--border); background: var(--bg-surface); border-radius: var(--radius-sm);
+      cursor: pointer; color: var(--text-muted); transition: var(--transition); display: flex; align-items: center; justify-content: center;
+    }
+    .preview-device-btn:hover, .preview-device-btn.active { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
+
+    /* FLOATING ACTION BUTTON (Mobile) */
+    .fab {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; width: 56px; height: 56px;
+      background: var(--primary); color: white; border: none; border-radius: 50%;
+      display: none; align-items: center; justify-content: center; cursor: pointer;
+      box-shadow: var(--shadow-xl); z-index: 30; transition: var(--transition);
+    }
+    .fab:hover { transform: scale(1.1); background: var(--primary-hover); }
+    @media (max-width: 768px) { .fab { display: flex; } }
+
+    /* DASHBOARD CHARTS */
+    .chart-bar {
+      display: flex; align-items: flex-end; gap: 0.5rem; height: 120px; padding: 1rem 0;
+    }
+    .chart-bar-item {
+      flex: 1; background: var(--primary-light); border-radius: 4px 4px 0 0;
+      min-height: 8px; transition: var(--transition); position: relative;
+      cursor: pointer;
+    }
+    .chart-bar-item:hover { background: var(--primary); }
+    .chart-bar-item::after {
+      content: attr(data-value); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.25rem; opacity: 0; transition: opacity 0.2s;
+    }
+    .chart-bar-item:hover::after { opacity: 1; }
+
+    /* MESSAGE PREVIEW MODAL */
+    .message-preview { font-size: 0.95rem; line-height: 1.6; }
+    .message-preview .meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+
+    /* RESPONSIVE GRID */
+    .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+    @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+    /* THEME TOGGLE */
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 0.5rem; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .theme-toggle:hover { background: var(--bg-body); color: var(--primary); }
+
+    /* ANIMATIONS */
+    .fade-in { animation: fadeIn 0.3s ease; }
+    .slide-in { animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* SELECTION CHECKBOX */
+    .row-select { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+    th .row-select { margin-right: 0.5rem; }
+
+    /* STATUS FILTER */
+    .status-filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .status-filter {
+      padding: 0.35rem 0.75rem; border-radius: 1000px; border: 1px solid var(--border);
+      background: var(--bg-surface); color: var(--text-secondary); font-size: 0.8rem;
+      cursor: pointer; transition: var(--transition); font-weight: 500;
+    }
+    .status-filter:hover { border-color: var(--primary); color: var(--primary); }
+    .status-filter.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* TIME AGO */
+    .time-ago { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* MOBILE OPTIMIZATIONS */
+    @media (max-width: 640px) {
+      .content { padding: 1rem; }
+      .card-header { padding: 0.875rem 1rem; }
+      .card-body { padding: 1rem; }
+      .card-footer { padding: 0.75rem 1rem; }
+      .stats-row { gap: 0.75rem; }
+      .stat-box { padding: 1rem; }
+      .stat-box h3 { font-size: 1.5rem; }
+      .table-toolbar { flex-direction: column; align-items: stretch; }
+      .search-box { max-width: none; }
+      .filter-group { justify-content: flex-end; }
+      .modal-body { padding: 1rem; }
+      .form-grid { gap: 0.75rem; }
+      .media-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+      .media-item img { height: 100px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- LOGIN -->
+  <div class="login-wrap" id="loginScreen">
+    <div class="login-box">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <h1 style="text-align:center;">Panel de Administración</h1>
+      <p style="text-align:center;">Jesus Leovel Faura Hernandez - Portfolio Manager</p>
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" class="form-control" id="loginUser" value="admin" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" class="form-control" id="loginPass" value="jlfh2024" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="login()">Ingresar</button>
+      <div style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center;">
+        <label class="form-check" style="font-size:0.8rem;color:var(--text-secondary);">
+          <input type="checkbox" id="rememberMe"> <span>Recordarme</span>
+        </label>
+        <button class="btn btn-sm btn-secondary" onclick="resetCredentials()">Olvidé mi contraseña</button>
+      </div>
+      <p style="margin-top:1rem;font-size:0.75rem;color:var(--text-muted);text-align:center;">
+        
+      </p>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="app" id="app">
+
+    <!-- SIDEBAR OVERLAY -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" onclick="toggleSidebar()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="sidebar-brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span>JLFH Admin</span>
+      </div>
+      <ul class="nav-list">
+        <li><button class="nav-item active" onclick="nav('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </button></li>
+        <li><button class="nav-item" onclick="nav('projects')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Proyectos
+        </button></li>
+        <li><button class="nav-item" onclick="nav('services')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Servicios
+        </button></li>
+        <li><button class="nav-item" onclick="nav('stack')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Tecnologías
+        </button></li>
+        <li><button class="nav-item" onclick="nav('experience')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Experiencia
+        </button></li>
+        <li><button class="nav-item" onclick="nav('media')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Medios
+        </button></li>
+        <li><button class="nav-item" onclick="nav('messages')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Mensajes <span class="nav-badge" id="navMsgCount">0</span>
+        </button></li>
+        <li><button class="nav-item" onclick="nav('config')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.62 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.62a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.38 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Configuración
+        </button></li>
+        <li><button class="nav-item" onclick="nav('preview')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Vista Previa
+        </button></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="nav-item" onclick="logout()" style="color:var(--danger);width:100%;margin:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar Sesión
+        </button>
+        <div style="margin-top:0.75rem;display:flex;justify-content:space-between;align-items:center;">
+          <span>v4.0.0 | Cuba</span>
+          <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+            <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="search-global">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar... (Ctrl+K)" id="globalSearch" oninput="globalSearch(this.value)">
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn-primary btn-sm hidden-sm" onclick="quickAdd()">+ Nuevo</button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- DASHBOARD -->
+        <div class="section active" id="sec-dashboard">
+          <div class="stats-row">
+            <div class="stat-box">
+              <div>
+                <p>Proyectos</p>
+                <h3 id="statProjects">0</h3>
+              </div>
+              <div class="stat-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div>
+                <p>Servicios</p>
+                <h3 id="statServices">0</h3>
+              </div>
+              <div class="stat-icon green">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div>
+                <p>Mensajes Nuevos</p>
+                <h3 id="statMessages">0</h3>
+              </div>
+              <div class="stat-icon orange">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div>
+                <p>Archivos</p>
+                <h3 id="statAssets">0</h3>
+              </div>
+              <div class="stat-icon red">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Actividad Reciente</div>
+                <div style="display:flex;gap:0.5rem;">
+                  <button class="btn btn-secondary btn-sm" onclick="loadDemoData()">Cargar Demo</button>
+                  <button class="btn btn-secondary btn-sm" onclick="exportData()">Exportar JSON</button>
+                  <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Exportar CSV</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart-bar" id="activityChart"></div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Acción</th><th>Entidad</th><th>Fecha</th><th>Estado</th></tr></thead>
+                    <tbody id="activityTable"><tr><td colspan="4" class="empty">Sin actividad registrada</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-header"><div class="card-title">Resumen del Sistema</div></div>
+                <div class="card-body" style="font-size:0.9rem;color:var(--text-secondary);">
+                  <div style="display:flex;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--border);"><span>Storage usado</span><strong id="storageUsed">0 KB</strong></div>
+                  <div style="display:flex;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--border);"><span>Proyectos publicados</span><strong id="pubProjects">0</strong></div>
+                  <div style="display:flex;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--border);"><span>Techs destacadas</span><strong id="featStack">0</strong></div>
+                  <div style="display:flex;justify-content:space-between;padding:0.75rem 0;"><span>Versión</span><strong>4.0.0</strong></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">Atajos de Teclado</div></div>
+                <div class="card-body" style="font-size:0.85rem;color:var(--text-secondary);">
+                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);"><span><kbd style="background:var(--bg-body);padding:0.15rem 0.4rem;border-radius:4px;border:1px solid var(--border);font-family:inherit;">Ctrl</kbd> + <kbd style="background:var(--bg-body);padding:0.15rem 0.4rem;border-radius:4px;border:1px solid var(--border);font-family:inherit;">K</kbd></span><span>Buscar</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);"><span><kbd style="background:var(--bg-body);padding:0.15rem 0.4rem;border-radius:4px;border:1px solid var(--border);font-family:inherit;">ESC</kbd></span><span>Cerrar modal</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:0.5rem 0;"><span><kbd style="background:var(--bg-body);padding:0.15rem 0.4rem;border-radius:4px;border:1px solid var(--border);font-family:inherit;">N</kbd></span><span>Nuevo item</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="section" id="sec-projects">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Proyectos</div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('project')">Nuevo Proyecto</button>
+            </div>
+            <div class="card-body">
+              <div class="table-toolbar">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Buscar proyectos..." id="searchProjects" oninput="filterProjects()">
+                </div>
+                <div class="filter-group">
+                  <select id="filterProjectStatus" onchange="filterProjects()">
+                    <option value="">Todos los estados</option>
+                    <option value="Publicado">Publicado</option>
+                    <option value="Borrador">Borrador</option>
+                    <option value="Archivado">Archivado</option>
+                  </select>
+                  <select id="filterProjectCategory" onchange="filterProjects()">
+                    <option value="">Todas las categorías</option>
+                    <option value="Web">Web</option>
+                    <option value="Mobile">Mobile</option>
+                    <option value="Desktop">Desktop</option>
+                    <option value="IA / ML">IA / ML</option>
+                    <option value="DevOps">DevOps</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+              </div>
+              <div class="bulk-bar" id="projectBulkBar">
+                <span id="projectBulkCount">0 seleccionados</span>
+                <button class="btn btn-sm btn-danger" onclick="bulkDeleteProjects()">Eliminar</button>
+                <button class="btn btn-sm btn-secondary" onclick="clearSelection()">Cancelar</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th width="30"><input type="checkbox" class="row-select" onchange="toggleSelectAll('projects', this.checked)"></th>
+                      <th width="40">ID</th>
+                      <th>Vista</th>
+                      <th class="sortable" onclick="sortTable('projects', 'title')">Nombre</th>
+                      <th class="sortable" onclick="sortTable('projects', 'category')">Categoría</th>
+                      <th class="sortable" onclick="sortTable('projects', 'status')">Estado</th>
+                      <th>Destacado</th>
+                      <th class="sortable" onclick="sortTable('projects', 'date')">Fecha</th>
+                      <th width="120" class="text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="projectsTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SERVICES -->
+        <div class="section" id="sec-services">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Servicios</div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('service')">Nuevo Servicio</button>
+            </div>
+            <div class="card-body">
+              <div class="table-toolbar">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Buscar servicios..." id="searchServices" oninput="filterServices()">
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th width="30"><input type="checkbox" class="row-select" onchange="toggleSelectAll('services', this.checked)"></th><th>ID</th><th class="sortable" onclick="sortTable('services', 'title')">Nombre</th><th>Descripción</th><th class="sortable" onclick="sortTable('services', 'order')">Orden</th><th class="text-right">Acciones</th></tr></thead>
+                  <tbody id="servicesTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STACK -->
+        <div class="section" id="sec-stack">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Stack Tecnológico</div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('stack')">Nueva Tecnología</button>
+            </div>
+            <div class="card-body">
+              <div class="table-toolbar">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Buscar tecnologías..." id="searchStack" oninput="filterStack()">
+                </div>
+                <div class="filter-group">
+                  <select id="filterStackCategory" onchange="filterStack()">
+                    <option value="">Todas</option>
+                    <option value="Frontend">Frontend</option>
+                    <option value="Backend">Backend</option>
+                    <option value="Mobile">Mobile</option>
+                    <option value="Database">Database</option>
+                    <option value="DevOps">DevOps</option>
+                    <option value="IA / ML">IA / ML</option>
+                    <option value="Lenguaje">Lenguaje</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th width="30"><input type="checkbox" class="row-select" onchange="toggleSelectAll('stack', this.checked)"></th><th>ID</th><th>Logo</th><th class="sortable" onclick="sortTable('stack', 'name')">Nombre</th><th class="sortable" onclick="sortTable('stack', 'category')">Categoría</th><th class="sortable" onclick="sortTable('stack', 'level')">Nivel</th><th>Destacada</th><th class="text-right">Acciones</th></tr></thead>
+                  <tbody id="stackTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXPERIENCE -->
+        <div class="section" id="sec-experience">
+          <div class="tabs">
+            <button class="tab active" onclick="switchExpTab(this,'work')">Laboral</button>
+            <button class="tab" onclick="switchExpTab(this,'education')">Educación</button>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" id="expTitle">Experiencia Laboral</div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('experience')">Agregar</button>
+            </div>
+            <div class="card-body">
+              <div class="table-toolbar">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Buscar..." id="searchExperience" oninput="filterExperience()">
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th width="30"><input type="checkbox" class="row-select" onchange="toggleSelectAll('experience', this.checked)"></th><th>ID</th><th class="sortable" onclick="sortTable('experience', 'company')">Empresa/Institución</th><th class="sortable" onclick="sortTable('experience', 'role')">Rol/Título</th><th>Periodo</th><th>Actual</th><th class="text-right">Acciones</th></tr></thead>
+                  <tbody id="experienceTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEDIA -->
+        <div class="section" id="sec-media">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Biblioteca de Medios</div>
+              <div style="display:flex;gap:0.5rem;">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bulkUpload').click()">Subir Archivos</button>
+                <input type="file" id="bulkUpload" class="hidden" multiple accept="image/*,.svg,.pdf,.doc,.docx" onchange="handleBulkUpload(this)">
+                <button class="btn btn-danger btn-sm" onclick="clearAllAssets()">Vaciar Todo</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">
+                Soporta: JPG, PNG, WEBP, SVG, GIF, PDF. Arrastra archivos aquí o selecciona. Máx recomendado: 2MB.
+              </p>
+              <div class="file-input-box" id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                <div style="pointer-events:none;">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom:0.5rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div>Arrastra archivos aquí</div>
+                  <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">o haz clic para seleccionar</div>
+                </div>
+                <input type="file" id="dropZoneInput" multiple accept="image/*,.svg,.pdf,.doc,.docx" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="handleBulkUpload(this)">
+                <div class="file-progress" id="uploadProgress" style="display:none;position:absolute;bottom:0;left:0;right:0;margin:0;">
+                  <div class="file-progress-bar" id="uploadProgressBar"></div>
+                </div>
+              </div>
+              <div class="media-grid mt-4" id="mediaGrid">
+                <div class="empty" style="grid-column:1/-1;">No hay archivos subidos. Arrastra o selecciona archivos para comenzar.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="section" id="sec-messages">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Mensajes de Contacto</div>
+              <div>
+                <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Marcar Leídos</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteAllMessages()">Vaciar</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-toolbar">
+                <div class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" placeholder="Buscar mensajes..." id="searchMessages" oninput="filterMessages()">
+                </div>
+                <div class="filter-group">
+                  <select id="filterMsgStatus" onchange="filterMessages()">
+                    <option value="">Todos</option>
+                    <option value="unread">No leídos</option>
+                    <option value="read">Leídos</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th width="30"><input type="checkbox" class="row-select" onchange="toggleSelectAll('messages', this.checked)"></th><th class="sortable" onclick="sortTable('messages', 'name')">De</th><th>Email</th><th>Asunto</th><th>Mensaje</th><th class="sortable" onclick="sortTable('messages', 'date')">Fecha</th><th>Estado</th><th class="text-right">Acciones</th></tr></thead>
+                  <tbody id="messagesTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONFIG -->
+        <div class="section" id="sec-config">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Configuración del Portafolio</div></div>
+            <div class="card-body">
+              <div class="tabs">
+                <button class="tab active" onclick="switchConfigTab(this,'profile')">Perfil</button>
+                <button class="tab" onclick="switchConfigTab(this,'appearance')">Apariencia</button>
+                <button class="tab" onclick="switchConfigTab(this,'seo')">SEO y Redes</button>
+                <button class="tab" onclick="switchConfigTab(this,'security')">Seguridad</button>
+              </div>
+
+              <!-- Profile -->
+              <div id="cfg-profile" class="config-panel">
+                <div class="form-grid">
+                  <div class="form-group full"><h4 style="color:var(--primary);margin-bottom:0.5rem;">Información Personal</h4></div>
+                  <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" class="form-control" id="cfgName" value="Jesus Leovel Faura Hernandez">
+                  </div>
+                  <div class="form-group">
+                    <label>Título Profesional</label>
+                    <input type="text" class="form-control" id="cfgTitle" value="Developer Full Stack">
+                  </div>
+                  <div class="form-group">
+                    <label>Email Principal</label>
+                    <input type="email" class="form-control" id="cfgEmail" value="jesusleovelfh@gmail.com">
+                  </div>
+                  <div class="form-group">
+                    <label>Teléfono / WhatsApp</label>
+                    <input type="text" class="form-control" id="cfgPhone" value="+53 51625543">
+                  </div>
+                  <div class="form-group">
+                    <label>Ubicación</label>
+                    <input type="text" class="form-control" id="cfgLocation" value="Cuba">
+                  </div>
+                  <div class="form-group">
+                    <label>Edad</label>
+                    <input type="number" class="form-control" id="cfgAge" value="24">
+                  </div>
+                  <div class="form-group full">
+                    <label>Foto de Perfil</label>
+                    <div class="file-input-box" id="dropAvatar" onclick="document.getElementById('fileAvatar').click()">
+                      <div>Arrastra o haz clic para subir imagen</div>
+                      <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">JPG, PNG, WEBP. Max 2MB.</div>
+                      <input type="file" id="fileAvatar" accept="image/*" onchange="handleFileSelect(this,'avatar')">
+                    </div>
+                    <img id="previewAvatar" class="preview-circle hidden" src="" alt="Avatar">
+                  </div>
+                  <div class="form-group full">
+                    <label>Biografía Corta</label>
+                    <textarea class="form-control" id="cfgBio" rows="2" maxlength="160" oninput="updateCharCounter(this, 'bioCounter')">Developer Full Stack de 24 años. Especializado en web, mobile, desktop e inteligencia artificial.</textarea>
+                    <div class="char-counter" id="bioCounter">0/160</div>
+                  </div>
+                  <div class="form-group full">
+                    <label>Texto Acerca de (Largo)</label>
+                    <textarea class="form-control" id="cfgAbout" rows="4">Desde Cuba para el mundo. Construyo soluciones digitales escalables con código limpio y arquitectura sólida.</textarea>
+                  </div>
+                  <div class="form-group full">
+                    <label>CV / Resume (PDF)</label>
+                    <div class="file-input-box" id="dropCV" onclick="document.getElementById('fileCV').click()">
+                      <div>Arrastra o haz clic para subir PDF</div>
+                      <input type="file" id="fileCV" accept=".pdf" onchange="handleFileSelect(this,'cv')">
+                    </div>
+                    <div id="previewCV" class="hidden" style="margin-top:0.5rem;font-size:0.85rem;color:var(--success);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Appearance -->
+              <div id="cfg-appearance" class="config-panel hidden">
+                <div class="form-grid">
+                  <div class="form-group full"><h4 style="color:var(--primary);margin-bottom:0.5rem;">Tema Visual</h4></div>
+                  <div class="form-group">
+                    <label>Color Primario</label>
+                    <div class="color-row" id="colorRow">
+                      <div class="color-opt active" style="background:#2563eb" onclick="pickColor(this,'#2563eb')"></div>
+                      <div class="color-opt" style="background:#0891b2" onclick="pickColor(this,'#0891b2')"></div>
+                      <div class="color-opt" style="background:#16a34a" onclick="pickColor(this,'#16a34a')"></div>
+                      <div class="color-opt" style="background:#d97706" onclick="pickColor(this,'#d97706')"></div>
+                      <div class="color-opt" style="background:#dc2626" onclick="pickColor(this,'#dc2626')"></div>
+                      <div class="color-opt" style="background:#7c3aed" onclick="pickColor(this,'#7c3aed')"></div>
+                      <div class="color-opt" style="background:#db2777" onclick="pickColor(this,'#db2777')"></div>
+                      <div class="color-opt" style="background:#0f172a" onclick="pickColor(this,'#0f172a')"></div>
+                    </div>
+                    <div style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-body);border-radius:var(--radius-sm);border:1px solid var(--border);">
+                      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">Vista previa</div>
+                      <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:var(--primary);"></div>
+                        <button class="btn btn-primary btn-sm">Botón primario</button>
+                        <span class="badge badge-published">Badge</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group full">
+                    <label>Fondo Hero (imagen local o URL)</label>
+                    <div style="display:flex;gap:0.5rem;">
+                      <input type="text" class="form-control" id="cfgHeroBg" placeholder="https://... o selecciona archivo" style="flex:1;">
+                      <button class="btn btn-secondary" onclick="document.getElementById('fileHero').click()">Examinar</button>
+                    </div>
+                    <input type="file" id="fileHero" class="hidden" accept="image/*" onchange="handleFileSelect(this,'hero')">
+                    <img id="previewHero" class="img-preview-small hidden" src="" alt="Hero">
+                  </div>
+                  <div class="form-group full">
+                    <label>Logo Personal (imagen local o URL)</label>
+                    <div style="display:flex;gap:0.5rem;">
+                      <input type="text" class="form-control" id="cfgLogo" placeholder="https://... o selecciona archivo" style="flex:1;">
+                      <button class="btn btn-secondary" onclick="document.getElementById('fileLogo').click()">Examinar</button>
+                    </div>
+                    <input type="file" id="fileLogo" class="hidden" accept="image/*" onchange="handleFileSelect(this,'logo')">
+                    <img id="previewLogo" class="img-preview-small hidden" src="" alt="Logo">
+                  </div>
+                </div>
+              </div>
+
+              <!-- SEO -->
+              <div id="cfg-seo" class="config-panel hidden">
+                <div class="form-grid">
+                  <div class="form-group full"><h4 style="color:var(--primary);margin-bottom:0.5rem;">SEO y Metadatos</h4></div>
+                  <div class="form-group full">
+                    <label>Título del Sitio (meta title)</label>
+                    <input type="text" class="form-control" id="cfgSiteTitle" value="Jesus Leovel Faura Hernandez | Developer Portfolio">
+                  </div>
+                  <div class="form-group full">
+                    <label>Descripción SEO (meta description)</label>
+                    <textarea class="form-control" id="cfgSeoDesc" rows="2" maxlength="160" oninput="updateCharCounter(this, 'seoCounter')">Portafolio profesional de Jesus Leovel Faura Hernandez, Developer Full Stack especializado en web, mobile, desktop e IA.</textarea>
+                    <div class="char-counter" id="seoCounter">0/160</div>
+                  </div>
+                  <div class="form-group full">
+                    <label>Palabras Clave</label>
+                    <input type="text" class="form-control" id="cfgKeywords" value="developer, fullstack, react, nodejs, python, flutter, cuba, portfolio">
+                  </div>
+                  <div class="form-group full"><h4 style="color:var(--primary);margin:1rem 0 0.5rem;">Redes Sociales</h4></div>
+                  <div class="form-group"><label>GitHub</label><input type="text" class="form-control" id="cfgGithub" placeholder="https://github.com/..."></div>
+                  <div class="form-group"><label>LinkedIn</label><input type="text" class="form-control" id="cfgLinkedin" placeholder="https://linkedin.com/in/..."></div>
+                  <div class="form-group"><label>Twitter / X</label><input type="text" class="form-control" id="cfgTwitter" placeholder="https://twitter.com/..."></div>
+                  <div class="form-group"><label>WhatsApp Link</label><input type="text" class="form-control" id="cfgWhatsapp" value="https://wa.me/5351625543"></div>
+                </div>
+              </div>
+
+              <!-- Security -->
+              <div id="cfg-security" class="config-panel hidden">
+                <div class="form-grid">
+                  <div class="form-group full"><h4 style="color:var(--primary);margin-bottom:0.5rem;">Cambiar Contraseña</h4></div>
+                  <div class="form-group">
+                    <label>Contraseña Actual</label>
+                    <input type="password" class="form-control" id="cfgPassCurrent">
+                  </div>
+                  <div class="form-group">
+                    <label>Nueva Contraseña</label>
+                    <input type="password" class="form-control" id="cfgPassNew" oninput="checkPasswordStrength(this.value)">
+                    <div class="form-hint" id="passStrength"></div>
+                  </div>
+                  <div class="form-group">
+                    <label>Confirmar Nueva</label>
+                    <input type="password" class="form-control" id="cfgPassConfirm">
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 flex gap-3" style="flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="saveConfig()">Guardar Configuración</button>
+                <button class="btn btn-secondary" onclick="resetAll()">Resetear Todo</button>
+                <button class="btn btn-secondary" onclick="exportData()">Exportar Backup</button>
+                <button class="btn btn-secondary" onclick="importData()">Importar Backup</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport(this)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="section" id="sec-preview">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Vista Previa del Portafolio</div>
+              <div style="display:flex;gap:0.5rem;align-items:center;">
+                <div class="preview-devices">
+                  <button class="preview-device-btn active" onclick="setPreviewDevice('desktop')" title="Desktop">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  </button>
+                  <button class="preview-device-btn" onclick="setPreviewDevice('tablet')" title="Tablet">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                  </button>
+                  <button class="preview-device-btn" onclick="setPreviewDevice('mobile')" title="Mobile">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+                  </button>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="refreshPreview()">Actualizar</button>
+                <button class="btn btn-primary btn-sm" onclick="window.open('iwiw.html','_blank')">Abrir en Nueva Pestaña</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0;text-align:center;background:var(--bg-body);">
+              <iframe id="previewFrame" src="iwiw.html" style="width:100%;height:75vh;border:none;display:block;margin:0 auto;transition:width 0.3s;"></iframe>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- FLOATING ACTION BUTTON -->
+    <button class="fab" onclick="quickAdd()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nuevo Registro</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="modalSave" onclick="saveModal()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGE READ MODAL -->
+  <div class="modal-backdrop" id="msgBackdrop" onclick="closeMsgModal(event)">
+    <div class="modal" style="max-width:560px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle del Mensaje</h3>
+        <button class="modal-close" onclick="closeMsgModal()">×</button>
+      </div>
+      <div class="modal-body message-preview" id="msgPreviewBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeMsgModal()">Cerrar</button>
+        <button class="btn btn-primary" onclick="replyMessage()">Responder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ADD -->
+  <div class="modal-backdrop" id="quickBackdrop" onclick="closeQuick(event)">
+    <div class="modal" style="max-width:360px;" onclick="event.stopPropagation()">
+      <div class="modal-header"><h3>Crear Nuevo</h3></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:0.5rem;">
+        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="closeQuick();openModal('project')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Proyecto
+        </button>
+        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="closeQuick();openModal('service')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Servicio
+        </button>
+        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="closeQuick();openModal('stack')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Tecnología
+        </button>
+        <button class="btn btn-secondary" style="justify-content:flex-start;" onclick="closeQuick();openModal('experience')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Experiencia
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== REST API ENGINE ====================
+    const API_BASE = '/api/rest';
+    const cache = {};
+
+    async function apiFetch(endpoint, options = {}) {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+      return res.json();
+    }
+
+    const DB = {
+      prefix: 'jlfh_',
+      _local: {
+        get(k, def) { try { return JSON.parse(localStorage.getItem('jlfh_'+k)) || def; } catch(e) { return def; } },
+        set(k, v) { localStorage.setItem('jlfh_'+k, JSON.stringify(v)); },
+        del(k) { localStorage.removeItem('jlfh_'+k); },
+      },
+      get(k, def) {
+        if (cache[k] !== undefined) return cache[k];
+        return this._local.get(k, def);
+      },
+      set(k, v) {
+        cache[k] = v;
+        this._local.set(k, v);
+      },
+      del(k) {
+        delete cache[k];
+        this._local.del(k);
+      },
+      async init() {
+        // Seed data if needed
+        try {
+          await apiFetch('/seed', { method: 'POST' });
+        } catch(e) { /* already seeded or error */ }
+        await this.syncAll();
+      },
+      async syncAll() {
+        try {
+          const [projects, services, stack, experiences, messages, configs] = await Promise.all([
+            apiFetch('/projects'),
+            apiFetch('/services'),
+            apiFetch('/stack'),
+            apiFetch('/experiences'),
+            apiFetch('/messages'),
+            apiFetch('/configs'),
+          ]);
+          cache.projects = projects || [];
+          cache.services = services || [];
+          cache.stack = stack || [];
+          cache.experience = experiences || [];
+          cache.messages = messages || [];
+          // Convert configs array to object
+          const cfgObj = {};
+          (configs || []).forEach(c => { cfgObj[c.key] = c.value; });
+          cache.config = cfgObj;
+        } catch(e) {
+          console.error('Sync error:', e);
+        }
+      }
+    };
+    DB.init();
+
+    // ==================== TOAST SYSTEM ====================
+    function toast(message, type='info', duration=3000) {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      const icons = {
+        success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        warning: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+      el.innerHTML = `${icons[type]}<<span>${message}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.classList.add('hiding');
+        setTimeout(() => el.remove(), 300);
+      }, duration);
+    }
+
+    // ==================== THEME ====================
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('jlfh_theme', next);
+      toast(`Tema ${next === 'dark' ? 'oscuro' : 'claro'} activado`, 'info');
+    }
+    const savedTheme = localStorage.getItem('jlfh_theme');
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // ==================== FILE / ASSET SYSTEM ====================
+    function readFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve({ name: file.name, type: file.type, size: file.size, data: e.target.result });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    async function handleFileSelect(input, target) {
+      if (!input.files[0]) return;
+      const asset = await readFile(input.files[0]);
+      const assets = DB.get('assets', []);
+      asset.id = 'asset_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+      assets.push(asset);
+      DB.set('assets', assets);
+      logActivity('Subió', `Archivo: ${asset.name}`);
+
+      if (target === 'avatar') { 
+        document.getElementById('cfgAvatar')?.setAttribute('value', asset.id); 
+        updatePreview('previewAvatar', asset.data); 
+      }
+      if (target === 'hero') { 
+        document.getElementById('cfgHeroBg').value = asset.id; 
+        updatePreview('previewHero', asset.data); 
+      }
+      if (target === 'logo') { 
+        document.getElementById('cfgLogo').value = asset.id; 
+        updatePreview('previewLogo', asset.data); 
+      }
+      if (target === 'cv') {
+        document.getElementById('previewCV').textContent = 'CV cargado: ' + asset.name;
+        document.getElementById('previewCV').classList.remove('hidden');
+      }
+      if (target === 'project') {
+        document.getElementById('pImageLocal').value = asset.id;
+        document.getElementById('previewProject').src = asset.data;
+        document.getElementById('previewProject').classList.remove('hidden');
+      }
+      if (target === 'tech') {
+        document.getElementById('tLogoLocal').value = asset.id;
+        document.getElementById('previewTech').src = asset.data;
+        document.getElementById('previewTech').classList.remove('hidden');
+      }
+      renderAssets(); updateStats();
+      toast('Archivo subido correctamente', 'success');
+    }
+    function updatePreview(id, src) {
+      const el = document.getElementById(id);
+      if (el && src) { el.src = src; el.classList.remove('hidden'); }
+    }
+    function resolveAsset(value) {
+      if (!value) return '';
+      if (value.startsWith('http') || value.startsWith('data:')) return value;
+      const assets = DB.get('assets', []);
+      const found = assets.find(a => a.id === value);
+      return found ? found.data : value;
+    }
+    async function handleBulkUpload(input) {
+      const files = Array.from(input.files);
+      if (files.length === 0) return;
+      const progressBar = document.getElementById('uploadProgressBar');
+      const progressWrap = document.getElementById('uploadProgress');
+      progressWrap.style.display = 'block';
+      const assets = DB.get('assets', []);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const asset = await readFile(file);
+        asset.id = 'asset_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+        assets.push(asset);
+        progressBar.style.width = ((i + 1) / files.length * 100) + '%';
+      }
+      DB.set('assets', assets);
+      logActivity('Subió', `${files.length} archivo(s)`);
+      setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 500);
+      renderAssets(); updateStats();
+      toast(`${files.length} archivo(s) subidos`, 'success');
+      input.value = '';
+    }
+    function renderAssets() {
+      const assets = DB.get('assets', []);
+      const grid = document.getElementById('mediaGrid');
+      if (assets.length === 0) { 
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><div>No hay archivos subidos</div></div>'; 
+        return; 
+      }
+      grid.innerHTML = assets.map(a => `
+        <div class="media-item" onclick="copyAssetId('${a.id}')" title="Click para copiar ID">
+          ${a.type.startsWith('image') ? `<img src="${a.data}" alt="${a.name}" loading="lazy">` : `<div style="height:120px;display:flex;align-items:center;justify-content:center;background:var(--bg-body);font-size:0.75rem;color:var(--text-muted);">${a.type.split('/')[1]?.toUpperCase()||'FILE'}</div>`}
+          <div class="meta" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px;">${a.name}</span>
+            <span style="font-size:0.65rem;">${(a.size/1024).toFixed(1)}KB</span>
+          </div>
+          <div class="copy-hint">Click para copiar ID</div>
+          <button class="delete-asset" onclick="event.stopPropagation();deleteAsset('${a.id}')">×</button>
+        </div>
+      `).join('');
+    }
+    function deleteAsset(id) {
+      if (!confirm('¿Eliminar este archivo?')) return;
+      DB.set('assets', DB.get('assets', []).filter(a => a.id !== id));
+      renderAssets(); updateStats();
+      toast('Archivo eliminado', 'warning');
+    }
+    function clearAllAssets() {
+      if (!confirm('¿Eliminar TODOS los archivos? Esto afectará imágenes en proyectos y config.')) return;
+      DB.set('assets', []);
+      renderAssets(); updateStats();
+      toast('Todos los archivos eliminados', 'warning');
+    }
+    function copyAssetId(id) {
+      navigator.clipboard.writeText(id).then(() => toast('ID copiado: ' + id, 'success'));
+    }
+
+    // DRAG & DROP
+    function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+    function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('dragover'); }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('dropZone').classList.remove('dragover');
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) {
+        const input = document.getElementById('dropZoneInput');
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+        handleBulkUpload(input);
+      }
+    }
+
+    // ==================== STATE ====================
+    let currentModal = null;
+    let editingId = null;
+    let expFilter = 'work';
+    let sortState = {};
+    let selectedItems = {};
+
+    // ==================== AUTH ====================
+    function login() {
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value;
+      const user = DB.get('user', {});
+      if (u === user.username && p === user.password) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('app').classList.add('active');
+        renderAll();
+        toast('Bienvenido al panel de administración', 'success');
+      } else {
+        toast('Credenciales incorrectas. Usa admin / jlfh2024', 'error');
+      }
+    }
+    function logout() {
+      document.getElementById('app').classList.remove('active');
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('loginPass').value = '';
+      toast('Sesión cerrada', 'info');
+    }
+    function resetCredentials() {
+      if (confirm('Se restaurarán las credenciales a admin / jlfh2024. ¿Continuar?')) {
+        DB.set('user', { username: 'admin', password: 'jlfh2024' });
+        toast('Credenciales restauradas: admin / jlfh2024', 'success');
+      }
+    }
+
+    // ==================== NAVIGATION ====================
+    function nav(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('sec-'+id).classList.add('active');
+      event.currentTarget.classList.add('active');
+      document.getElementById('pageTitle').textContent = {
+        dashboard:'Dashboard', projects:'Proyectos', services:'Servicios',
+        stack:'Tecnologías', experience:'Experiencia', media:'Biblioteca de Medios',
+        messages:'Mensajes', config:'Configuración', preview:'Vista Previa'
+      }[id];
+      if (id === 'dashboard') { updateStats(); renderActivityChart(); }
+      if (id === 'media') renderAssets();
+      if (id === 'preview') refreshPreview();
+      if (window.innerWidth < 1024) toggleSidebar();
+    }
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const toggle = document.getElementById('menuToggle');
+      sb.classList.toggle('open');
+      overlay.classList.toggle('active');
+      toggle.classList.toggle('active');
+    }
+
+    // ==================== KEYBOARD SHORTCUTS ====================
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (document.getElementById('modalBackdrop').classList.contains('active')) closeModal();
+        if (document.getElementById('msgBackdrop').classList.contains('active')) closeMsgModal();
+        if (document.getElementById('quickBackdrop').classList.contains('active')) closeQuick();
+      }
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (!document.querySelector('.modal-backdrop.active')) quickAdd();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const search = document.getElementById('globalSearch');
+        if (search) search.focus();
+      }
+    });
+
+    // ==================== DASHBOARD ====================
+    async function updateStats() {
+      const p = DB.get('projects', []);
+      const s = DB.get('services', []);
+      const m = DB.get('messages', []).filter(x => !x.read).length;
+      document.getElementById('statProjects').textContent = p.length;
+      document.getElementById('statServices').textContent = s.length;
+      document.getElementById('statMessages').textContent = m;
+      document.getElementById('statAssets').textContent = '0';
+      document.getElementById('pubProjects').textContent = p.filter(x=>x.status==='Publicado').length;
+      document.getElementById('featStack').textContent = DB.get('stack', []).filter(x=>x.featured).length;
+      const msgBadge = document.getElementById('navMsgCount');
+      if (m > 0) { msgBadge.textContent = m; msgBadge.classList.add('active'); }
+      else { msgBadge.classList.remove('active'); }
+      document.getElementById('storageUsed').textContent = 'DB';
+      // Load activities from API
+      try {
+        const act = await apiFetch('/activities');
+        const tbody = document.getElementById('activityTable');
+        if (!act || act.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty">Sin actividad reciente</td></tr>';
+        } else {
+          tbody.innerHTML = act.slice(0,6).map(a => `
+            <tr><td>${a.action}</td><td>${a.entity}</td><td class="time-ago">${formatTimeAgo(a.createdAt)}</td><td><span class="badge badge-published">${a.status}</span></td></tr>
+          `).join('');
+        }
+      } catch(e) {}
+      renderActivityChart();
+    }
+    function renderActivityChart() {
+      const act = DB.get('activity', []).slice(0, 7).reverse();
+      const chart = document.getElementById('activityChart');
+      if (act.length < 2) { chart.style.display = 'none'; return; }
+      chart.style.display = 'flex';
+      const max = Math.max(...act.map(a => a.entity.length || 1));
+      chart.innerHTML = act.map(a => {
+        const h = Math.max((a.entity.length / max) * 100, 15);
+        return `<div class="chart-bar-item" style="height:${h}%" data-value="${a.action}" title="${a.entity}"></div>`;
+      }).join('');
+    }
+    function logActivity(action, entity, status='Éxito') {
+      const act = DB.get('activity', []);
+      act.unshift({ action, entity, date: new Date().toISOString(), status });
+      DB.set('activity', act.slice(0, 20));
+    }
+    function formatTimeAgo(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = Math.floor((now - date) / 1000);
+      if (diff < 60) return 'Hace un momento';
+      if (diff < 3600) return `Hace ${Math.floor(diff/60)} min`;
+      if (diff < 86400) return `Hace ${Math.floor(diff/3600)} h`;
+      if (diff < 604800) return `Hace ${Math.floor(diff/86400)} d`;
+      return date.toLocaleDateString('es-ES');
+    }
+
+    // ==================== GLOBAL SEARCH ====================
+    function globalSearch(query) {
+      if (!query) return;
+      query = query.toLowerCase();
+      const sections = ['projects', 'services', 'stack', 'messages'];
+      for (const sec of sections) {
+        const data = DB.get(sec, []);
+        const found = data.find(item => {
+          const str = JSON.stringify(item).toLowerCase();
+          return str.includes(query);
+        });
+        if (found) {
+          navToSection(sec);
+          toast(`Resultado encontrado en ${sec}`, 'success');
+          return;
+        }
+      }
+      toast('No se encontraron resultados', 'warning');
+    }
+    function navToSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('sec-'+id).classList.add('active');
+      const navBtn = document.querySelector(`.nav-item[onclick="nav('${id}')"]`);
+      if (navBtn) navBtn.classList.add('active');
+      document.getElementById('pageTitle').textContent = {
+        dashboard:'Dashboard', projects:'Proyectos', services:'Servicios',
+        stack:'Tecnologías', experience:'Experiencia', media:'Biblioteca de Medios',
+        messages:'Mensajes', config:'Configuración', preview:'Vista Previa'
+      }[id];
+    }
+
+    // ==================== SELECTION & BULK ACTIONS ====================
+    function toggleSelectAll(type, checked) {
+      selectedItems[type] = checked ? DB.get(type, []).map(x => x.id) : [];
+      updateBulkBar(type);
+      renderAll();
+    }
+    function toggleSelect(type, id, checked) {
+      if (!selectedItems[type]) selectedItems[type] = [];
+      if (checked) selectedItems[type].push(id);
+      else selectedItems[type] = selectedItems[type].filter(x => x !== id);
+      updateBulkBar(type);
+    }
+    function updateBulkBar(type) {
+      const bar = document.getElementById(type + 'BulkBar');
+      const count = document.getElementById(type + 'BulkCount');
+      const items = selectedItems[type] || [];
+      if (items.length > 0 && bar) {
+        bar.classList.add('active');
+        count.textContent = `${items.length} seleccionado${items.length > 1 ? 's' : ''}`;
+      } else if (bar) {
+        bar.classList.remove('active');
+      }
+    }
+    function clearSelection() {
+      selectedItems = {};
+      document.querySelectorAll('.bulk-bar').forEach(b => b.classList.remove('active'));
+      renderAll();
+    }
+
+    // ==================== SORTING ====================
+    function sortTable(type, field) {
+      const current = sortState[type];
+      const direction = current && current.field === field && current.dir === 'asc' ? 'desc' : 'asc';
+      sortState[type] = { field, dir: direction };
+      
+      const data = DB.get(type, []);
+      data.sort((a, b) => {
+        let va = a[field] || '';
+        let vb = b[field] || '';
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+        if (va < vb) return direction === 'asc' ? -1 : 1;
+        if (va > vb) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+      DB.set(type, data);
+      renderAll();
+      
+      // Update header indicators
+      document.querySelectorAll(`#sec-${type} th.sortable`).forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.getAttribute('onclick')?.includes(field)) {
+          th.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+      });
+    }
+
+    // ==================== PROJECTS ====================
+    let projectFilter = { search: '', status: '', category: '' };
+    function filterProjects() {
+      projectFilter.search = document.getElementById('searchProjects').value.toLowerCase();
+      projectFilter.status = document.getElementById('filterProjectStatus').value;
+      projectFilter.category = document.getElementById('filterProjectCategory').value;
+      renderProjects();
+    }
+    function renderProjects() {
+      let data = DB.get('projects', []);
+      if (projectFilter.search) data = data.filter(p => JSON.stringify(p).toLowerCase().includes(projectFilter.search));
+      if (projectFilter.status) data = data.filter(p => p.status === projectFilter.status);
+      if (projectFilter.category) data = data.filter(p => p.category === projectFilter.category);
+      
+      const tbody = document.getElementById('projectsTable');
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="empty">No hay proyectos registrados</td></tr>'; return; }
+      tbody.innerHTML = data.map((p, i) => {
+        const img = resolveAsset(p.imageLocal) || p.image || '';
+        const isSelected = (selectedItems.projects || []).includes(p.id);
+        return `
+        <tr>
+          <td><input type="checkbox" class="row-select" ${isSelected ? 'checked' : ''} onchange="toggleSelect('projects', '${p.id}', this.checked)"></td>
+          <td>${i+1}</td>
+          <td>${img ? `<img src="${img}" style="width:48px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);">` : '-'}</td>
+          <td><strong>${p.title}</strong></td>
+          <td>${p.category}</td>
+          <td><span class="badge badge-${p.status==='Publicado'?'published':p.status==='Borrador'?'draft':'archived'}">${p.status}</span></td>
+          <td>${p.featured ? 'Sí' : 'No'}</td>
+          <td class="time-ago">${formatTimeAgo(p.date)}</td>
+          <td class="text-right">
+            <div class="row-actions">
+              <button onclick="duplicateProject('${p.id}')" title="Duplicar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button onclick="editProject('${p.id}')" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="danger" onclick="deleteProject('${p.id}')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+    function duplicateProject(id) {
+      const p = DB.get('projects', []).find(x => x.id === id);
+      if (!p) return;
+      const copy = { ...p, id: 'proj_' + Date.now(), title: p.title + ' (copia)', date: new Date().toISOString() };
+      DB.set('projects', [...DB.get('projects', []), copy]);
+      logActivity('Duplicó', `Proyecto: ${p.title}`);
+      renderProjects(); updateStats();
+      toast('Proyecto duplicado', 'success');
+    }
+    function bulkDeleteProjects() {
+      const ids = selectedItems.projects || [];
+      if (ids.length === 0) return;
+      if (!confirm(`¿Eliminar ${ids.length} proyecto(s)?`)) return;
+      DB.set('projects', DB.get('projects', []).filter(p => !ids.includes(p.id)));
+      logActivity('Eliminó', `${ids.length} proyectos`);
+      clearSelection(); renderProjects(); updateStats();
+      toast(`${ids.length} proyectos eliminados`, 'warning');
+    }
+
+    function projectForm(p={}) {
+      const img = resolveAsset(p.imageLocal) || p.image || '';
+      return `
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Título del Proyecto *</label>
+            <input type="text" class="form-control" id="pTitle" value="${p.title||''}" placeholder="Ej: Sistema de Gestión">
+          </div>
+          <div class="form-group">
+            <label>Categoría *</label>
+            <select class="form-control" id="pCategory">
+              <option ${p.category==='Web'?'selected':''}>Web</option>
+              <option ${p.category==='Mobile'?'selected':''}>Mobile</option>
+              <option ${p.category==='Desktop'?'selected':''}>Desktop</option>
+              <option ${p.category==='IA / ML'?'selected':''}>IA / ML</option>
+              <option ${p.category==='DevOps'?'selected':''}>DevOps</option>
+              <option ${p.category==='Otro'?'selected':''}>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select class="form-control" id="pStatus">
+              <option ${p.status==='Publicado'?'selected':''}>Publicado</option>
+              <option ${p.status==='Borrador'?'selected':''}>Borrador</option>
+              <option ${p.status==='Archivado'?'selected':''}>Archivado</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Imagen del Proyecto</label>
+            <div style="display:flex;gap:0.5rem;align-items:flex-start;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;">
+                <input type="text" class="form-control" id="pImage" value="${p.image||''}" placeholder="URL externa (opcional)">
+                <div style="margin-top:0.5rem;">
+                  <input type="hidden" id="pImageLocal" value="${p.imageLocal||''}">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileProject').click()">Subir archivo local</button>
+                  <input type="file" id="fileProject" class="hidden" accept="image/*" onchange="handleFileSelect(this,'project')">
+                </div>
+              </div>
+              <img id="previewProject" class="preview-thumb ${img?'':'hidden'}" src="${img}" style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid var(--border);">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>URL Demo</label>
+            <input type="text" class="form-control" id="pDemo" value="${p.demo||''}" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>URL Repositorio</label>
+            <input type="text" class="form-control" id="pRepo" value="${p.repo||''}" placeholder="https://github.com/...">
+          </div>
+          <div class="form-group full">
+            <label>Descripción</label>
+            <textarea class="form-control" id="pDesc" rows="3" placeholder="Descripción del proyecto...">${p.desc||''}</textarea>
+          </div>
+          <div class="form-group full">
+            <label>Tecnologías Usadas (separadas por coma)</label>
+            <input type="text" class="form-control" id="pTechs" value="${(p.techs||[]).join(', ')}" placeholder="React, Node.js, MongoDB">
+          </div>
+          <div class="form-group full">
+            <label class="form-check">
+              <input type="checkbox" id="pFeatured" ${p.featured?'checked':''}>
+              <span>Marcar como proyecto destacado</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+    async function saveProject() {
+      const id = editingId;
+      const techsStr = document.getElementById('pTechs').value;
+      const proj = {
+        title: document.getElementById('pTitle').value.trim(),
+        category: document.getElementById('pCategory').value,
+        status: document.getElementById('pStatus').value,
+        image: document.getElementById('pImage').value.trim(),
+        imageLocal: document.getElementById('pImageLocal').value.trim(),
+        demo: document.getElementById('pDemo').value.trim(),
+        repo: document.getElementById('pRepo').value.trim(),
+        description: document.getElementById('pDesc').value.trim(),
+        techs: techsStr,
+        featured: document.getElementById('pFeatured').checked ? 1 : 0,
+      };
+      if (!proj.title) { toast('El título es obligatorio', 'error'); return; }
+      try {
+        if (editingId) {
+          await apiFetch(`/projects/${editingId}`, { method: 'PUT', body: JSON.stringify(proj) });
+          toast('Proyecto actualizado', 'success');
+        } else {
+          await apiFetch('/projects', { method: 'POST', body: JSON.stringify(proj) });
+          toast('Proyecto creado', 'success');
+        }
+        await DB.syncAll();
+        closeModal(); renderProjects(); updateStats();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    function editProject(id) {
+      const p = DB.get('projects', []).find(x=>x.id===id);
+      if (!p) return;
+      editingId = id; currentModal = 'project';
+      document.getElementById('modalTitle').textContent = 'Editar Proyecto';
+      document.getElementById('modalBody').innerHTML = projectForm(p);
+      document.getElementById('modalBackdrop').classList.add('active');
+    }
+    async function deleteProject(id) {
+      const p = DB.get('projects', []).find(x => x.id === id);
+      if (!confirm(`¿Eliminar el proyecto "${p?.title || id}"?`)) return;
+      try {
+        await apiFetch(`/projects/${id}`, { method: 'DELETE' });
+        await DB.syncAll();
+        renderProjects(); updateStats();
+        toast('Proyecto eliminado', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== SERVICES ====================
+    let serviceFilter = '';
+    function filterServices() {
+      serviceFilter = document.getElementById('searchServices').value.toLowerCase();
+      renderServices();
+    }
+    function renderServices() {
+      let data = DB.get('services', []);
+      if (serviceFilter) data = data.filter(s => JSON.stringify(s).toLowerCase().includes(serviceFilter));
+      data.sort((a, b) => (a.order || 0) - (b.order || 0));
+      
+      const tbody = document.getElementById('servicesTable');
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No hay servicios registrados</td></tr>'; return; }
+      tbody.innerHTML = data.map((s, i) => {
+        const isSelected = (selectedItems.services || []).includes(s.id);
+        return `
+        <tr>
+          <td><input type="checkbox" class="row-select" ${isSelected ? 'checked' : ''} onchange="toggleSelect('services', '${s.id}', this.checked)"></td>
+          <td>${i+1}</td>
+          <td><strong>${s.title}</strong></td>
+          <td>${s.desc||'-'}</td>
+          <td>
+            <div class="row-actions">
+              <button onclick="moveService('${s.id}', -1)" title="Subir"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></button>
+              <span style="padding:0.25rem;font-weight:700;">${s.order||0}</span>
+              <button onclick="moveService('${s.id}', 1)" title="Bajar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+            </div>
+          </td>
+          <td class="text-right">
+            <div class="row-actions">
+              <button onclick="duplicateService('${s.id}')" title="Duplicar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button onclick="editService('${s.id}')" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="danger" onclick="deleteService('${s.id}')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+    function moveService(id, dir) {
+      const data = DB.get('services', []);
+      const idx = data.findIndex(x => x.id === id);
+      if (idx < 0) return;
+      const target = idx + dir;
+      if (target < 0 || target >= data.length) return;
+      const temp = data[idx].order;
+      data[idx].order = data[target].order;
+      data[target].order = temp;
+      DB.set('services', data);
+      renderServices();
+    }
+    function duplicateService(id) {
+      const s = DB.get('services', []).find(x => x.id === id);
+      if (!s) return;
+      const copy = { ...s, id: 'serv_' + Date.now(), title: s.title + ' (copia)', order: (s.order || 0) + 1 };
+      DB.set('services', [...DB.get('services', []), copy]);
+      logActivity('Duplicó', `Servicio: ${s.title}`);
+      renderServices(); updateStats();
+      toast('Servicio duplicado', 'success');
+    }
+    function serviceForm(s={}) {
+      return `
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre del Servicio *</label>
+            <input type="text" class="form-control" id="sTitle" value="${s.title||''}" placeholder="Ej: Desarrollo Web">
+          </div>
+          <div class="form-group">
+            <label>Orden de Visualización</label>
+            <input type="number" class="form-control" id="sOrder" value="${s.order||0}">
+          </div>
+          <div class="form-group full">
+            <label>Descripción</label>
+            <textarea class="form-control" id="sDesc" rows="3">${s.desc||''}</textarea>
+          </div>
+        </div>
+      `;
+    }
+    async function saveService() {
+      const serv = { title: document.getElementById('sTitle').value.trim(), order: parseInt(document.getElementById('sOrder').value)||0, description: document.getElementById('sDesc').value.trim() };
+      if (!serv.title) { toast('El nombre es obligatorio', 'error'); return; }
+      try {
+        if (editingId) {
+          await apiFetch(`/services/${editingId}`, { method: 'PUT', body: JSON.stringify(serv) });
+          toast('Servicio actualizado', 'success');
+        } else {
+          await apiFetch('/services', { method: 'POST', body: JSON.stringify(serv) });
+          toast('Servicio creado', 'success');
+        }
+        await DB.syncAll();
+        closeModal(); renderServices(); updateStats();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    function editService(id) {
+      const s = DB.get('services', []).find(x=>x.id===id);
+      if (!s) return;
+      editingId = id; currentModal = 'service';
+      document.getElementById('modalTitle').textContent = 'Editar Servicio';
+      document.getElementById('modalBody').innerHTML = serviceForm(s);
+      document.getElementById('modalBackdrop').classList.add('active');
+    }
+    async function deleteService(id) {
+      const s = DB.get('services', []).find(x => x.id === id);
+      if (!confirm(`¿Eliminar el servicio "${s?.title || id}"?`)) return;
+      try {
+        await apiFetch(`/services/${id}`, { method: 'DELETE' });
+        await DB.syncAll();
+        renderServices(); updateStats();
+        toast('Servicio eliminado', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== STACK ====================
+    let stackFilter = { search: '', category: '' };
+    function filterStack() {
+      stackFilter.search = document.getElementById('searchStack').value.toLowerCase();
+      stackFilter.category = document.getElementById('filterStackCategory').value;
+      renderStack();
+    }
+    function renderStack() {
+      let data = DB.get('stack', []);
+      if (stackFilter.search) data = data.filter(t => JSON.stringify(t).toLowerCase().includes(stackFilter.search));
+      if (stackFilter.category) data = data.filter(t => t.category === stackFilter.category);
+      
+      const tbody = document.getElementById('stackTable');
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Stack vacío</td></tr>'; return; }
+      tbody.innerHTML = data.map((t, i) => {
+        const logo = resolveAsset(t.logoLocal) || '';
+        const isSelected = (selectedItems.stack || []).includes(t.id);
+        return `
+        <tr>
+          <td><input type="checkbox" class="row-select" ${isSelected ? 'checked' : ''} onchange="toggleSelect('stack', '${t.id}', this.checked)"></td>
+          <td>${i+1}</td>
+          <td>${logo ? `<img src="${logo}" style="width:32px;height:32px;object-fit:contain;">` : '-'}</td>
+          <td><strong>${t.name}</strong></td>
+          <td>${t.category}</td>
+          <td>
+            <div style="background:var(--bg-body);border-radius:3px;height:6px;overflow:hidden;width:120px;display:inline-block;vertical-align:middle;margin-right:0.5rem;">
+              <div style="width:${t.level||0}%;background:var(--primary);height:100%;transition:width 0.5s;"></div>
+            </div>
+            <small>${t.level||0}%</small>
+          </td>
+          <td>${t.featured?'Sí':'No'}</td>
+          <td class="text-right">
+            <div class="row-actions">
+              <button onclick="duplicateStack('${t.id}')" title="Duplicar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+              <button onclick="editStack('${t.id}')" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="danger" onclick="deleteStack('${t.id}')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+    function duplicateStack(id) {
+      const t = DB.get('stack', []).find(x => x.id === id);
+      if (!t) return;
+      const copy = { ...t, id: 'tech_' + Date.now(), name: t.name + ' (copia)' };
+      DB.set('stack', [...DB.get('stack', []), copy]);
+      logActivity('Duplicó', `Tech: ${t.name}`);
+      renderStack(); updateStats();
+      toast('Tecnología duplicada', 'success');
+    }
+    function stackForm(t={}) {
+      const logo = resolveAsset(t.logoLocal) || '';
+      return `
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" class="form-control" id="tName" value="${t.name||''}" placeholder="Ej: React">
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select class="form-control" id="tCategory">
+              <option ${t.category==='Frontend'?'selected':''}>Frontend</option>
+              <option ${t.category==='Backend'?'selected':''}>Backend</option>
+              <option ${t.category==='Mobile'?'selected':''}>Mobile</option>
+              <option ${t.category==='Database'?'selected':''}>Database</option>
+              <option ${t.category==='DevOps'?'selected':''}>DevOps</option>
+              <option ${t.category==='IA / ML'?'selected':''}>IA / ML</option>
+              <option ${t.category==='Lenguaje'?'selected':''}>Lenguaje</option>
+              <option ${t.category==='Otro'?'selected':''}>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nivel de Dominio (0-100)</label>
+            <input type="range" class="form-control" id="tLevel" value="${t.level||90}" min="0" max="100" oninput="document.getElementById('tLevelVal').textContent=this.value+'%'">
+            <div style="text-align:center;font-weight:700;color:var(--primary);" id="tLevelVal">${t.level||90}%</div>
+          </div>
+          <div class="form-group">
+            <label>Color (hex)</label>
+            <input type="color" class="form-control" id="tColor" value="${t.color||'#2563eb'}" style="height:40px;padding:0.25rem;cursor:pointer;">
+          </div>
+          <div class="form-group full">
+            <label>Logo / Icono</label>
+            <div style="display:flex;gap:0.5rem;align-items:flex-start;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;">
+                <input type="text" class="form-control" id="tLogo" value="${t.logo||''}" placeholder="URL externa (opcional)">
+                <div style="margin-top:0.5rem;">
+                  <input type="hidden" id="tLogoLocal" value="${t.logoLocal||''}">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('fileTech').click()">Subir SVG/PNG local</button>
+                  <input type="file" id="fileTech" class="hidden" accept="image/*,.svg" onchange="handleFileSelect(this,'tech')">
+                </div>
+              </div>
+              <img id="previewTech" class="preview-thumb ${logo?'':'hidden'}" src="${logo}" style="width:48px;height:48px;object-fit:contain;border-radius:4px;border:1px solid var(--border);">
+            </div>
+          </div>
+          <div class="form-group full">
+            <label class="form-check">
+              <input type="checkbox" id="tFeatured" ${t.featured?'checked':''}>
+              <span>Destacar en el portafolio</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+    async function saveStack() {
+      const tech = { name: document.getElementById('tName').value.trim(), category: document.getElementById('tCategory').value, level: parseInt(document.getElementById('tLevel').value)||0, color: document.getElementById('tColor').value.trim(), logo: document.getElementById('tLogo').value.trim(), logoLocal: document.getElementById('tLogoLocal').value.trim(), featured: document.getElementById('tFeatured').checked ? 1 : 0 };
+      if (!tech.name) { toast('El nombre es obligatorio', 'error'); return; }
+      try {
+        if (editingId) {
+          await apiFetch(`/stack/${editingId}`, { method: 'PUT', body: JSON.stringify(tech) });
+          toast('Tecnología actualizada', 'success');
+        } else {
+          await apiFetch('/stack', { method: 'POST', body: JSON.stringify(tech) });
+          toast('Tecnología creada', 'success');
+        }
+        await DB.syncAll();
+        closeModal(); renderStack(); updateStats();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    function editStack(id) {
+      const t = DB.get('stack', []).find(x=>x.id===id);
+      if (!t) return;
+      editingId = id; currentModal = 'stack';
+      document.getElementById('modalTitle').textContent = 'Editar Tecnología';
+      document.getElementById('modalBody').innerHTML = stackForm(t);
+      document.getElementById('modalBackdrop').classList.add('active');
+    }
+    async function deleteStack(id) {
+      const t = DB.get('stack', []).find(x => x.id === id);
+      if (!confirm(`¿Eliminar la tecnología "${t?.name || id}"?`)) return;
+      try {
+        await apiFetch(`/stack/${id}`, { method: 'DELETE' });
+        await DB.syncAll();
+        renderStack(); updateStats();
+        toast('Tecnología eliminada', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== EXPERIENCE ====================
+    let expSearch = '';
+    function switchExpTab(btn, type) {
+      document.querySelectorAll('#sec-experience .tab').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      expFilter = type;
+      document.getElementById('expTitle').textContent = type==='work' ? 'Experiencia Laboral' : 'Educación y Certificaciones';
+      renderExperience();
+    }
+    function filterExperience() {
+      expSearch = document.getElementById('searchExperience').value.toLowerCase();
+      renderExperience();
+    }
+    function renderExperience() {
+      let data = DB.get('experience', []).filter(x => x.type === expFilter);
+      if (expSearch) data = data.filter(e => JSON.stringify(e).toLowerCase().includes(expSearch));
+      
+      const tbody = document.getElementById('experienceTable');
+      if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="empty">No hay registros de ${expFilter==='work'?'experiencia laboral':'educación'}</td></tr>`; return; }
+      tbody.innerHTML = data.map((e, i) => {
+        const isSelected = (selectedItems.experience || []).includes(e.id);
+        return `
+        <tr>
+          <td><input type="checkbox" class="row-select" ${isSelected ? 'checked' : ''} onchange="toggleSelect('experience', '${e.id}', this.checked)"></td>
+          <td>${i+1}</td>
+          <td><strong>${e.company}</strong></td>
+          <td>${e.role}</td>
+          <td>${e.period}</td>
+          <td>${e.current ? 'Sí' : 'No'}</td>
+          <td class="text-right">
+            <div class="row-actions">
+              <button onclick="editExp('${e.id}')" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="danger" onclick="deleteExp('${e.id}')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+    function expForm(e={}) {
+      return `
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>${expFilter==='work'?'Empresa / Cliente *':'Institución / Plataforma *'}</label>
+            <input type="text" class="form-control" id="eCompany" value="${e.company||''}">
+          </div>
+          <div class="form-group full">
+            <label>${expFilter==='work'?'Cargo / Rol *':'Título / Certificación *'}</label>
+            <input type="text" class="form-control" id="eRole" value="${e.role||''}">
+          </div>
+          <div class="form-group">
+            <label>Periodo</label>
+            <input type="text" class="form-control" id="ePeriod" value="${e.period||''}" placeholder="Ej: 2022 - Presente">
+          </div>
+          <div class="form-group">
+            <label class="form-check" style="margin-top:1.5rem;">
+              <input type="checkbox" id="eCurrent" ${e.current?'checked':''}>
+              <span>${expFilter==='work'?'Trabajo actual':'Estudio actual'}</span>
+            </label>
+          </div>
+          <div class="form-group full">
+            <label>Descripción</label>
+            <textarea class="form-control" id="eDesc" rows="3">${e.desc||''}</textarea>
+          </div>
+        </div>
+      `;
+    }
+    async function saveExp() {
+      const item = { type: expFilter, company: document.getElementById('eCompany').value.trim(), role: document.getElementById('eRole').value.trim(), period: document.getElementById('ePeriod').value.trim(), current: document.getElementById('eCurrent').checked ? 1 : 0, description: document.getElementById('eDesc').value.trim() };
+      if (!item.company || !item.role) { toast('Complete los campos obligatorios', 'error'); return; }
+      try {
+        if (editingId) {
+          await apiFetch(`/experiences/${editingId}`, { method: 'PUT', body: JSON.stringify(item) });
+          toast('Registro actualizado', 'success');
+        } else {
+          await apiFetch('/experiences', { method: 'POST', body: JSON.stringify(item) });
+          toast('Registro creado', 'success');
+        }
+        await DB.syncAll();
+        closeModal(); renderExperience();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    function editExp(id) {
+      const e = DB.get('experience', []).find(x=>x.id===id);
+      if (!e) return;
+      editingId = id; currentModal = 'experience';
+      document.getElementById('modalTitle').textContent = 'Editar Registro';
+      document.getElementById('modalBody').innerHTML = expForm(e);
+      document.getElementById('modalBackdrop').classList.add('active');
+    }
+    async function deleteExp(id) {
+      const e = DB.get('experience', []).find(x => x.id === id);
+      if (!confirm(`¿Eliminar el registro de "${e?.company || id}"?`)) return;
+      try {
+        await apiFetch(`/experiences/${id}`, { method: 'DELETE' });
+        await DB.syncAll();
+        renderExperience();
+        toast('Registro eliminado', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== MESSAGES ====================
+    let msgFilter = { search: '', status: '' };
+    function filterMessages() {
+      msgFilter.search = document.getElementById('searchMessages').value.toLowerCase();
+      msgFilter.status = document.getElementById('filterMsgStatus').value;
+      renderMessages();
+    }
+    function renderMessages() {
+      let data = DB.get('messages', []);
+      if (msgFilter.search) data = data.filter(m => JSON.stringify(m).toLowerCase().includes(msgFilter.search));
+      if (msgFilter.status === 'unread') data = data.filter(m => !m.read);
+      if (msgFilter.status === 'read') data = data.filter(m => m.read);
+      
+      const tbody = document.getElementById('messagesTable');
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Bandeja de entrada vacía</td></tr>'; return; }
+      tbody.innerHTML = data.map(m => {
+        const isSelected = (selectedItems.messages || []).includes(m.id);
+        return `
+        <tr style="${!m.read?'background:rgba(37,99,235,0.03)':''}">
+          <td><input type="checkbox" class="row-select" ${isSelected ? 'checked' : ''} onchange="toggleSelect('messages', '${m.id}', this.checked)"></td>
+          <td><strong>${m.name}</strong></td>
+          <td><a href="mailto:${m.email}" style="color:var(--primary);text-decoration:none;">${m.email}</a></td>
+          <td>${m.subject||'-'}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="viewMessage('${m.id}')">${m.message.substring(0,50)}${m.message.length>50?'...':''}</td>
+          <td class="time-ago">${formatTimeAgo(m.date)}</td>
+          <td><span class="badge ${m.read?'badge-read':'badge-new'}">${m.read?'Leído':'Nuevo'}</span></td>
+          <td class="text-right">
+            <div class="row-actions">
+              <button onclick="viewMessage('${m.id}')" title="Ver"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button onclick="toggleRead('${m.id}')" title="${m.read?'Marcar no leído':'Marcar leído'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button class="danger" onclick="deleteMessage('${m.id}')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      `}).join('');
+    }
+    function viewMessage(id) {
+      const m = DB.get('messages', []).find(x => x.id === id);
+      if (!m) return;
+      if (!m.read) toggleRead(id);
+      document.getElementById('msgPreviewBody').innerHTML = `
+        <div class="meta">
+          <div><strong>De:</strong> ${m.name} &lt;${m.email}&gt;</div>
+          <div><strong>Asunto:</strong> ${m.subject || 'Sin asunto'}</div>
+          <div><strong>Fecha:</strong> ${m.date}</div>
+        </div>
+        <div style="white-space:pre-wrap;">${m.message}</div>
+      `;
+      document.getElementById('msgBackdrop').dataset.msgId = id;
+      document.getElementById('msgBackdrop').classList.add('active');
+    }
+    function closeMsgModal(e) {
+      if (e && e.target !== document.getElementById('msgBackdrop')) return;
+      document.getElementById('msgBackdrop').classList.remove('active');
+    }
+    function replyMessage() {
+      const id = document.getElementById('msgBackdrop').dataset.msgId;
+      const m = DB.get('messages', []).find(x => x.id === id);
+      if (m) window.open(`mailto:${m.email}?subject=Re: ${m.subject || 'Contacto'}`, '_blank');
+    }
+    async function toggleRead(id) {
+      const m = DB.get('messages', []).find(x => x.id === id);
+      if (!m) return;
+      try {
+        await apiFetch(`/messages/${id}`, { method: 'PUT', body: JSON.stringify({ read: !m.read }) });
+        await DB.syncAll();
+        renderMessages(); updateStats();
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    async function markAllRead() {
+      const msgs = DB.get('messages', []);
+      for (const m of msgs) {
+        if (!m.read) await apiFetch(`/messages/${m.id}`, { method: 'PUT', body: JSON.stringify({ read: true }) });
+      }
+      await DB.syncAll();
+      renderMessages(); updateStats();
+      toast('Todos los mensajes marcados como leídos', 'success');
+    }
+    async function deleteMessage(id) {
+      const m = DB.get('messages', []).find(x => x.id === id);
+      if (!confirm(`¿Eliminar mensaje de ${m?.name || id}?`)) return;
+      try {
+        await apiFetch(`/messages/${id}`, { method: 'DELETE' });
+        await DB.syncAll();
+        renderMessages(); updateStats();
+        toast('Mensaje eliminado', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    async function deleteAllMessages() {
+      if (!confirm('¿Vaciar bandeja de entrada?')) return;
+      try {
+        const msgs = DB.get('messages', []);
+        for (const m of msgs) {
+          await apiFetch(`/messages/${m.id}`, { method: 'DELETE' });
+        }
+        await DB.syncAll();
+        renderMessages(); updateStats();
+        toast('Bandeja vaciada', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== MODAL SYSTEM ====================
+    function openModal(type) {
+      currentModal = type; editingId = null;
+      const titles = {project:'Nuevo Proyecto', service:'Nuevo Servicio', stack:'Nueva Tecnología', experience:'Nuevo Registro'};
+      document.getElementById('modalTitle').textContent = titles[type];
+      const forms = {project:projectForm(), service:serviceForm(), stack:stackForm(), experience:expForm()};
+      document.getElementById('modalBody').innerHTML = forms[type];
+      document.getElementById('modalBackdrop').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal(e) {
+      if (e && e.target !== document.getElementById('modalBackdrop')) return;
+      document.getElementById('modalBackdrop').classList.remove('active');
+      document.body.style.overflow = '';
+      currentModal = null; editingId = null;
+    }
+    function saveModal() {
+      if (currentModal === 'project') saveProject();
+      else if (currentModal === 'service') saveService();
+      else if (currentModal === 'stack') saveStack();
+      else if (currentModal === 'experience') saveExp();
+    }
+    function quickAdd() {
+      document.getElementById('quickBackdrop').classList.add('active');
+    }
+    function closeQuick(e) {
+      if (e && e.target !== document.getElementById('quickBackdrop')) return;
+      document.getElementById('quickBackdrop').classList.remove('active');
+    }
+
+    // ==================== CONFIG ====================
+    function switchConfigTab(btn, panel) {
+      document.querySelectorAll('#sec-config .tab').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.config-panel').forEach(p=>p.classList.add('hidden'));
+      document.getElementById('cfg-'+panel).classList.remove('hidden');
+    }
+    function pickColor(el, hex) {
+      document.querySelectorAll('.color-opt').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      document.documentElement.style.setProperty('--primary', hex);
+      document.documentElement.style.setProperty('--primary-hover', adjustColor(hex, -20));
+    }
+    function adjustColor(hex, amt) {
+      let num = parseInt(hex.replace('#',''),16);
+      let r = (num >> 16) + amt;
+      let g = ((num >> 8) & 0x00FF) + amt;
+      let b = (num & 0x0000FF) + amt;
+      return '#' + (0x1000000 + (r<<255?r<<1?0:r:255)*0x10000 + (g<<255?g<<1?0:g:255)*0x100 + (b<<255?b<<1?0:b:255)).toString(16).slice(1);
+    }
+    function updateCharCounter(textarea, counterId) {
+      const counter = document.getElementById(counterId);
+      if (!counter) return;
+      const len = textarea.value.length;
+      const max = parseInt(textarea.getAttribute('maxlength')) || 160;
+      counter.textContent = `${len}/${max}`;
+      counter.classList.toggle('warning', len > max * 0.9);
+    }
+    function checkPasswordStrength(pass) {
+      const hint = document.getElementById('passStrength');
+      if (!pass) { hint.textContent = ''; return; }
+      let strength = 0;
+      if (pass.length > 6) strength++;
+      if (pass.length > 10) strength++;
+      if (/[A-Z]/.test(pass)) strength++;
+      if (/[0-9]/.test(pass)) strength++;
+      if (/[^A-Za-z0-9]/.test(pass)) strength++;
+      const levels = ['Muy débil', 'Débil', 'Media', 'Fuerte', 'Muy fuerte'];
+      const colors = ['var(--danger)', 'var(--danger)', 'var(--warning)', 'var(--success)', 'var(--success)'];
+      hint.textContent = `Fuerza: ${levels[strength-1] || 'Muy débil'}`;
+      hint.style.color = colors[strength-1] || 'var(--danger)';
+    }
+    function loadConfig() {
+      const c = DB.get('config', {});
+      document.getElementById('cfgName').value = c.name||'';
+      document.getElementById('cfgTitle').value = c.title||'';
+      document.getElementById('cfgEmail').value = c.email||'';
+      document.getElementById('cfgPhone').value = c.phone||'';
+      document.getElementById('cfgLocation').value = c.location||'';
+      document.getElementById('cfgAge').value = c.age||'';
+      document.getElementById('cfgBio').value = c.bio||'';
+      document.getElementById('cfgAbout').value = c.about||'';
+      document.getElementById('cfgSiteTitle').value = c.siteTitle||'';
+      document.getElementById('cfgSeoDesc').value = c.seoDesc||'';
+      document.getElementById('cfgKeywords').value = c.keywords||'';
+      document.getElementById('cfgHeroBg').value = c.heroBg||'';
+      document.getElementById('cfgLogo').value = c.logo||'';
+      document.getElementById('cfgGithub').value = c.github||'';
+      document.getElementById('cfgLinkedin').value = c.linkedin||'';
+      document.getElementById('cfgTwitter').value = c.twitter||'';
+      document.getElementById('cfgWhatsapp').value = c.whatsapp||'';
+      updateCharCounter(document.getElementById('cfgBio'), 'bioCounter');
+      updateCharCounter(document.getElementById('cfgSeoDesc'), 'seoCounter');
+      if (c.heroBg) updatePreview('previewHero', resolveAsset(c.heroBg));
+      if (c.logo) updatePreview('previewLogo', resolveAsset(c.logo));
+      const color = c.primaryColor || '#2563eb';
+      document.querySelectorAll('.color-opt').forEach(opt => {
+        if (opt.getAttribute('onclick')?.includes(color)) opt.classList.add('active');
+        else opt.classList.remove('active');
+      });
+      document.documentElement.style.setProperty('--primary', color);
+    }
+    async function saveConfig() {
+      const configKeys = [
+        { key: 'name', value: document.getElementById('cfgName').value.trim() },
+        { key: 'title', value: document.getElementById('cfgTitle').value.trim() },
+        { key: 'email', value: document.getElementById('cfgEmail').value.trim() },
+        { key: 'phone', value: document.getElementById('cfgPhone').value.trim() },
+        { key: 'location', value: document.getElementById('cfgLocation').value.trim() },
+        { key: 'age', value: document.getElementById('cfgAge').value.trim() },
+        { key: 'bio', value: document.getElementById('cfgBio').value.trim() },
+        { key: 'about', value: document.getElementById('cfgAbout').value.trim() },
+        { key: 'siteTitle', value: document.getElementById('cfgSiteTitle').value.trim() },
+        { key: 'seoDesc', value: document.getElementById('cfgSeoDesc').value.trim() },
+        { key: 'keywords', value: document.getElementById('cfgKeywords').value.trim() },
+        { key: 'heroBg', value: document.getElementById('cfgHeroBg').value.trim() },
+        { key: 'logo', value: document.getElementById('cfgLogo').value.trim() },
+        { key: 'github', value: document.getElementById('cfgGithub').value.trim() },
+        { key: 'linkedin', value: document.getElementById('cfgLinkedin').value.trim() },
+        { key: 'twitter', value: document.getElementById('cfgTwitter').value.trim() },
+        { key: 'whatsapp', value: document.getElementById('cfgWhatsapp').value.trim() },
+      ];
+      try {
+        for (const item of configKeys) {
+          await apiFetch('/configs', { method: 'POST', body: JSON.stringify(item) });
+        }
+        const np = document.getElementById('cfgPassNew').value;
+        if (np) {
+          const cur = document.getElementById('cfgPassCurrent').value;
+          if (cur !== 'jlfh2024') { toast('Contraseña actual incorrecta', 'error'); return; }
+          if (np !== document.getElementById('cfgPassConfirm').value) { toast('Las contraseñas no coinciden', 'error'); return; }
+          document.getElementById('cfgPassCurrent').value='';
+          document.getElementById('cfgPassNew').value='';
+          document.getElementById('cfgPassConfirm').value='';
+          toast('Contraseña actualizada', 'success');
+        }
+        await DB.syncAll();
+        toast('Configuración guardada correctamente', 'success');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== PREVIEW DEVICE ====================
+    function setPreviewDevice(device) {
+      const frame = document.getElementById('previewFrame');
+      const btns = document.querySelectorAll('.preview-device-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      const widths = { desktop: '100%', tablet: '768px', mobile: '375px' };
+      frame.style.width = widths[device];
+      frame.style.border = device !== 'desktop' ? '8px solid var(--border)' : 'none';
+      frame.style.borderRadius = device !== 'desktop' ? '16px' : '0';
+    }
+
+    // ==================== IMPORT / EXPORT ====================
+    function exportData() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        projects: DB.get('projects', []),
+        services: DB.get('services', []),
+        stack: DB.get('stack', []),
+        experience: DB.get('experience', []),
+        messages: DB.get('messages', []),
+        assets: DB.get('assets', []),
+        config: DB.get('config', {}),
+        activity: DB.get('activity', [])
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `jlfh-backup-${Date.now()}.json`; a.click();
+      URL.revokeObjectURL(url);
+      logActivity('Exportó', 'Backup JSON');
+      toast('Backup exportado', 'success');
+    }
+    function exportCSV() {
+      const projects = DB.get('projects', []);
+      if (projects.length === 0) { toast('No hay proyectos para exportar', 'warning'); return; }
+      const headers = ['ID', 'Titulo', 'Categoria', 'Estado', 'Destacado', 'Fecha', 'Tecnologias'];
+      const rows = projects.map(p => [p.id, `"${p.title}"`, p.category, p.status, p.featured, p.date, `"${(p.techs||[]).join(', ')}"`]);
+      const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `jlfh-projects-${Date.now()}.csv`; a.click();
+      URL.revokeObjectURL(url);
+      toast('CSV exportado', 'success');
+    }
+    function importData() { document.getElementById('importFile').click(); }
+    function handleImport(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.projects) DB.set('projects', data.projects);
+          if (data.services) DB.set('services', data.services);
+          if (data.stack) DB.set('stack', data.stack);
+          if (data.experience) DB.set('experience', data.experience);
+          if (data.messages) DB.set('messages', data.messages);
+          if (data.assets) DB.set('assets', data.assets);
+          if (data.config) DB.set('config', data.config);
+          renderAll();
+          logActivity('Importó', 'Backup JSON');
+          toast('Datos importados correctamente', 'success');
+        } catch(err) { toast('Archivo inválido', 'error'); }
+      };
+      reader.readAsText(file);
+      input.value = '';
+    }
+    async function resetAll() {
+      if (!confirm('ATENCIÓN: Se borrarán TODOS los datos. ¿Está seguro?')) return;
+      try {
+        // Delete all items one by one
+        for (const type of ['projects','services','stack','experiences','messages']) {
+          const items = DB.get(type === 'experiences' ? 'experience' : type, []);
+          for (const item of items) {
+            if (item.id) await apiFetch(`/${type}/${item.id}`, { method: 'DELETE' }).catch(()=>{});
+          }
+        }
+        await DB.syncAll();
+        renderAll();
+        toast('Datos reseteados', 'warning');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== DEMO DATA ====================
+    async function loadDemoData() {
+      try {
+        await apiFetch('/seed', { method: 'POST' });
+        await DB.syncAll();
+        renderAll();
+        toast('Datos demo cargados', 'success');
+      } catch(e) { toast('Error: ' + e.message, 'error'); }
+    }
+    function _oldLoadDemoData() { // disabled
+      /*DB.set('projects', [
+        {id:'p1', title:'E-commerce Local', category:'Web', status:'Publicado', image:'', imageLocal:'', demo:'#', repo:'#', desc:'Plataforma de comercio electrónico.', techs:['React','Node.js','MongoDB'], featured:true, date:'2024-01-15T10:00:00Z'},
+        {id:'p2', title:'App Delivery', category:'Mobile', status:'Publicado', image:'', imageLocal:'', demo:'#', repo:'#', desc:'App tipo delivery.', techs:['Flutter','Firebase'], featured:true, date:'2024-03-10T10:00:00Z'},
+        {id:'p3', title:'Asistente IA', category:'IA / ML', status:'Publicado', image:'', imageLocal:'', demo:'#', repo:'#', desc:'Chatbot con NLP.', techs:['Python','TensorFlow'], featured:false, date:'2024-05-22T10:00:00Z'},
+        {id:'p4', title:'POS Restaurant', category:'Desktop', status:'Borrador', image:'', imageLocal:'', demo:'#', repo:'#', desc:'Sistema punto de venta.', techs:['Electron','SQLite'], featured:false, date:'2024-06-01T10:00:00Z'}
+      ]);
+      DB.set('services', [
+        {id:'s1', title:'Desarrollo Web Full Stack', order:1, desc:'React, Vue, Angular, Node.js, Python.'},
+        {id:'s2', title:'Apps Móviles', order:2, desc:'Flutter, React Native, Kotlin, Swift.'},
+        {id:'s3', title:'Desktop Multiplataforma', order:3, desc:'Windows, Linux, Mac. Electron, Tauri, Qt.'},
+        {id:'s4', title:'Inteligencia Artificial', order:4, desc:'Agentes IA, chatbots, NLP.'},
+        {id:'s5', title:'Consultoría y Soporte', order:5, desc:'Asesoramiento técnico y DevOps.'}
+      ]);
+      DB.set('stack', [
+        {id:'t1', name:'React', category:'Frontend', level:95, color:'#61DAFB', logo:'', logoLocal:'', featured:true},
+        {id:'t2', name:'Node.js', category:'Backend', level:90, color:'#339933', logo:'', logoLocal:'', featured:true},
+        {id:'t3', name:'Python', category:'Lenguaje', level:88, color:'#3776AB', logo:'', logoLocal:'', featured:true},
+        {id:'t4', name:'Flutter', category:'Mobile', level:85, color:'#02569B', logo:'', logoLocal:'', featured:true},
+        {id:'t5', name:'Docker', category:'DevOps', level:80, color:'#2496ED', logo:'', logoLocal:'', featured:false},
+        {id:'t6', name:'PostgreSQL', category:'Database', level:82, color:'#336791', logo:'', logoLocal:'', featured:false},
+        {id:'t7', name:'TensorFlow', category:'IA / ML', level:75, color:'#FF6F00', logo:'', logoLocal:'', featured:false},
+        {id:'t8', name:'Linux', category:'DevOps', level:85, color:'#FCC624', logo:'', logoLocal:'', featured:false}
+      ]);
+      DB.set('experience', [
+        {id:'e1', type:'work', company:'Freelance / Autónomo', role:'Developer Full Stack', period:'2021 - Presente', current:true, desc:'Desarrollo de soluciones para clientes internacionales.'},
+        {id:'e2', type:'education', company:'Universidad / Autodidacta', role:'Ingeniería Informática', period:'2018 - 2022', current:false, desc:'Formación en desarrollo de software y sistemas distribuidos.'}
+      ]);
+      const msgs = [
+        {id:'m1', name:'Carlos Méndez', email:'cmendez@ejemplo.com', subject:'Proyecto Web', message:'Hola Jesús, me interesa contratarte para desarrollar una tienda online. Necesito algo moderno con React y Node.js. ¿Podemos agendar una llamada?', date:'2026-06-02T10:30:00Z', read:false},
+        {id:'m2', name:'Ana Rodríguez', email:'ana.r@empresa.com', subject:'App Móvil', message:'Necesitamos una aplicación de delivery. ¿Cuánto tiempo tomaría? Tenemos un presupuesto de $5000.', date:'2026-06-01T16:45:00Z', read:true}
+      ];
+      DB.set('messages', msgs);
+      logActivity('Importó', 'Datos de demostración');
+      renderAll();
+      toast('Datos demo cargados', 'success');
+    }
+
+    // ==================== PREVIEW ====================
+    function refreshPreview() {
+      const f = document.getElementById('previewFrame');
+      f.src = f.src;
+      toast('Vista previa actualizada', 'success');
+    }
+
+    // ==================== RENDER ALL ====================
+    function renderAll() {
+      renderProjects(); renderServices(); renderStack(); renderExperience(); renderMessages(); renderAssets(); updateStats(); loadConfig();
+    }
+
+    // ==================== INIT ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Auto-login if remember me
+      if (localStorage.getItem('jlfh_remember') === 'true') {
+        document.getElementById('loginUser').value = 'admin';
+      }
+    });
+  </script>
+</body>
+</html>
